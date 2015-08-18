@@ -72,7 +72,6 @@ class Chunks:
                 intersection_chunk = self.intersecton_chunks[i]
                 return (id_chunk, intersection_chunk)
 
-
 def total_area(rects):
     n = len(rects)
     if n == 0:
@@ -92,6 +91,10 @@ def process_input(input):
     num_rects, raw_rects = numbers[0], numbers[1:]
     rects = [ tuple(raw_rects[(i * 4):(i * 4 + 4)]) for i in xrange(num_rects)]
     return rects
+
+def read_file(file_name):
+    with open (file_name, "r") as file:
+        return file.read()
 
 def test_total_area():
     print "test 'total_area'"
@@ -133,6 +136,8 @@ def test_process_input():
     print "test process input - success"
 
     print ""
+
+
 
 def test_is_intersected():
     print "test 'is_intersected'"
@@ -198,7 +203,7 @@ def test_calc_intersection():
 
     print ""
 
-rects = process_input(raw_input())
+rects = process_input(read_file("input.txt"))
 print total_area(rects)
 #test_process_input()
 #test_is_intersected()
