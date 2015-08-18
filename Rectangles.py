@@ -87,8 +87,10 @@ def total_area(rects):
 
 def process_input(input):
     raw_numbers = re.compile('\s+').split(input.strip())
-    numbers = map(int, raw_numbers)
-    num_rects, raw_rects = numbers[0], numbers[1:]
+    numbers = map(lambda x: int(float(x)), raw_numbers)
+    #num_rects, raw_rects = numbers[0], numbers[1:]
+    raw_rects = numbers
+    num_rects = len(numbers)/4
     rects = [ tuple(raw_rects[(i * 4):(i * 4 + 4)]) for i in xrange(num_rects)]
     return rects
 
@@ -118,7 +120,14 @@ def test_total_area():
              (10,  5, 12,  7),
              (11,  6, 13,  8)]
     assert total_area(rects) == 49
-    print "example 4 - success"
+
+    rects = [( 6,  8, 14, 15),
+             ( 6,  5, 12, 10),
+             ( 6,  2, 15, 10),
+             ( 6,  7, 14, 14)]
+    assert total_area(rects) == 112
+
+    print "example 5 - success"
 
 def test_process_input():
     print "test 'process_input'"
@@ -203,8 +212,15 @@ def test_calc_intersection():
 
     print ""
 
-rects = process_input(read_file("input.txt"))
+#rects = process_input(read_file("input.txt"))
+rects = [( 6,  8, 14, 15),
+         ( 6,  5, 12, 10),
+         ( 6,  2, 15, 10),
+         ( 6,  7, 14, 14)]
 print total_area(rects)
+
+print "example 5 - success"
+#print total_area(rects)
 #test_process_input()
 #test_is_intersected()
 #test_calc_intersection()
