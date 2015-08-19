@@ -63,7 +63,7 @@ class Chunks:
         #self.intersecton_chunks[]
         pass
 
-def total_area(rects):
+def calc_total_area(rects):
     n = len(rects)
     if n == 0:
         return 0
@@ -71,18 +71,37 @@ def total_area(rects):
         return calc_area(rects[0])
 
     raw_area = sum(map(calc_area, rects))
+#sdfds
+    if raw_area < 250000:
+        return calc_total_area_ink(rects)
+
+    rects = sorted(rects, key=lambda rect: rect[y1])
     intr_area = 0
 
     for r1_id in xrange(n - 1):
-        chunk = set()
+        chunk = []
         for r2_id in xrange(r1_id + 1, n):
             r1, r2 = rects[r1_id], rects[r2_id]
+            if r1[y2] < r2[y1]:
+                break
             if is_intersected(r1, r2):
                 intersection = calc_intersection(r1, r2)
-                chunk.add(intersection)
-        intr_area += total_area(list(chunk))
+                chunk.append(intersection)
+        #remove duplicates
+        chunk = list(set(chunk))
+        intr_area += calc_total_area(chunk)
 
     return raw_area - intr_area
+
+def calc_total_area_ink(rects):
+    field = set()
+    for rect in rects:
+        x1, y1, x2, y2 = rect
+        for x in xrange(x1, x2):
+            for y in xrange(y1, y2):
+                field.add((x,y))
+    return len(field)
+
 
     #chunks = Chunks(rects)
     #intersection_chunks = chunks.get_chunks()
@@ -92,11 +111,17 @@ def total_area(rects):
 
 def process_input(input):
     raw_numbers = re.compile('\s+').split(input.strip())
-    numbers = map(lambda x: int(float(x)), raw_numbers)
-    #num_rects, raw_rects = numbers[0], numbers[1:]
-    raw_rects = numbers
-    num_rects = len(numbers)/4
-    rects = [ tuple(raw_rects[(i * 4):(i * 4 + 4)]) for i in xrange(num_rects)]
+    numbers = map(int, raw_numbers)
+    num_rects, raw_rects = numbers[0], numbers[1:]
+    rects = []
+    for i in xrange(num_rects):
+        rect = tuple(raw_rects[(i * 4):(i * 4 + 4)])
+        x1, y1, x2, y2 = rect
+        x1, y1, x2, y2 = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
+        rect = (x1, y1, x2, y2)
+        rects.append(rect)
+
+    #rects = [ tuple(raw_rects[(i * 4):(i * 4 + 4)]) for i in xrange(num_rects)]
     return rects
 
 def read_file(file_name):
@@ -108,15 +133,15 @@ def test_total_area():
 
     rects = [(1, 1, 3, 3),
              (2, 2, 4, 4)]
-    assert total_area(rects) == 7
+    assert calc_total_area(rects) == 7
     print "example 1 - success"
 
     rects = [(1, 1, 7, 7)]
-    assert total_area(rects) == 36
+    assert calc_total_area(rects) == 36
     print "example 2 - success"
 
     rects = []
-    assert total_area(rects) == 0
+    assert calc_total_area(rects) == 0
     print "example 3 - sucess"
 
     rects = [( 0,  0,  6,  5),
@@ -124,13 +149,13 @@ def test_total_area():
              ( 3,  2,  8,  6),
              (10,  5, 12,  7),
              (11,  6, 13,  8)]
-    assert total_area(rects) == 49
+    assert calc_total_area(rects) == 49
 
     rects = [( 6,  8, 14, 15),
              ( 6,  5, 12, 10),
              ( 6,  2, 15, 10),
              ( 6,  7, 14, 14)]
-    assert total_area(rects) == 112
+    assert calc_total_area(rects) == 112
 
     print "example 5 - success"
 
@@ -222,11 +247,20 @@ rects = process_input(read_file("input.txt"))
 #         ( 6,  5, 12, 10),
 #         ( 6,  2, 15, 10),
 #         ( 6,  7, 14, 14)]
-#print total_area(rects)
 #print "should be 112"
+#rects = [(0, 0, 5, 5),
+#         (1, 1, 6, 6),
+#         (2, 2, 7, 7),
+#         (3, 3, 8, 8),
+#         (4, 4, 9, 9),
+#         (12, 12, 14, 14),
+#         (13, 13, 15, 15)]
+#print 61  + 7
+#print total_area(rects)
+
 
 #print "example 5 - success"
-print total_area(rects)
+print calc_total_area(rects)
 #test_process_input()
 #test_is_intersected()
 #test_calc_intersection()
