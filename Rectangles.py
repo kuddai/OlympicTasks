@@ -27,9 +27,7 @@ class Chunks:
     def __init__(self, rects):
         self.rects = rects
         #rect_id_chunks
-        self.id_chunks = []
-        self.intersecton_chunks = []
-
+        self.chunks = [None] * len(rects)
         self.split_to_chunks()
 
     def split_to_chunks(self):
@@ -39,38 +37,31 @@ class Chunks:
             for r2_id in xrange(r1_id + 1, n):
                     self.update_between(r1_id, r2_id)
 
-    def get_intersection_chunks(self):
-        return self.intersecton_chunks
+    def get_chunks(self):
+        return self.chunks
 
     def update_between(self, r1_id, r2_id):
-        id_chunk, intersection_chunk = self.get_chunk(r1_id)
+        chunk = self.get_chunk(r1_id)
         r1, r2 = self.rects[r1_id], self.rects[r2_id]
         if not is_intersected(r1, r2):
             return
         #actuall update
         intersection = calc_intersection(r1, r2)
-        id_chunk.add(r2_id)
-        intersection_chunk.add(intersection)
+        chunk.add(intersection)
 
     def get_chunk(self, rect_id):
-        search_result = self.find_chunk(rect_id)
-        if search_result is not None:
-            return  search_result
+        if self.chunks[rect_id] is not None:
+            return self.chunks[rect_id]
         return self.create_chunk(rect_id)
 
     def create_chunk(self, rect_id):
-        id_chunk = set([rect_id])
-        intersection_chunk = set()
-        #registering it
-        self.id_chunks.append(id_chunk)
-        self.intersecton_chunks.append(intersection_chunk)
-        return (id_chunk, intersection_chunk)
+        chunk = set()
+        self.chunks[rect_id] = chunk
+        return chunk
 
     def find_chunk(self, rect_id):
-        for i, id_chunk in enumerate(self.id_chunks):
-            if rect_id in id_chunk:
-                intersection_chunk = self.intersecton_chunks[i]
-                return (id_chunk, intersection_chunk)
+        #self.intersecton_chunks[]
+        pass
 
 def total_area(rects):
     n = len(rects)
@@ -79,11 +70,25 @@ def total_area(rects):
     if n == 1:
         return calc_area(rects[0])
 
-    chunks = Chunks(rects)
-    intersection_chunks = chunks.get_intersection_chunks()
     raw_area = sum(map(calc_area, rects))
-    intr_area = sum(total_area(list(intr_chunk)) for intr_chunk in intersection_chunks)
+    intr_area = 0
+
+    for r1_id in xrange(n - 1):
+        chunk = set()
+        for r2_id in xrange(r1_id + 1, n):
+            r1, r2 = rects[r1_id], rects[r2_id]
+            if is_intersected(r1, r2):
+                intersection = calc_intersection(r1, r2)
+                chunk.add(intersection)
+        intr_area += total_area(list(chunk))
+
     return raw_area - intr_area
+
+    #chunks = Chunks(rects)
+    #intersection_chunks = chunks.get_chunks()
+
+    #intr_area = sum(total_area(list(intr_chunk)) for intr_chunk in intersection_chunks)
+    #return raw_area - intr_area
 
 def process_input(input):
     raw_numbers = re.compile('\s+').split(input.strip())
@@ -212,15 +217,16 @@ def test_calc_intersection():
 
     print ""
 
-#rects = process_input(read_file("input.txt"))
-rects = [( 6,  8, 14, 15),
-         ( 6,  5, 12, 10),
-         ( 6,  2, 15, 10),
-         ( 6,  7, 14, 14)]
-print total_area(rects)
-
-print "example 5 - success"
+rects = process_input(read_file("input.txt"))
+#rects = [( 6,  8, 14, 15),
+#         ( 6,  5, 12, 10),
+#         ( 6,  2, 15, 10),
+#         ( 6,  7, 14, 14)]
 #print total_area(rects)
+#print "should be 112"
+
+#print "example 5 - success"
+print total_area(rects)
 #test_process_input()
 #test_is_intersected()
 #test_calc_intersection()
