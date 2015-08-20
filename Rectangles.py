@@ -28,8 +28,6 @@ def calc_area(r):
     height = r[y2] - r[y1]
     return  width * height
 
-
-
 def calc_total_area(rects):
     n = len(rects)
     if n == 0:
@@ -42,10 +40,9 @@ def calc_total_area(rects):
 
     return raw_area - intr_area
 
-
 def calc_intr_area(rects):
     n = len(rects)
-    intr_area = 0
+    intrs_area = 0#intersections area
     rects = sorted(rects, key=lambda rect: rect[y1])#to do zoning in at least one axis
 
     for r1_id in xrange(n - 1):
@@ -75,11 +72,10 @@ def calc_intr_area(rects):
 
             intersections.append(calc_intersection(r1, r2))
 
-        intr_area += calc_total_area(intersections)
+        intrs_area += calc_total_area(intersections)
     #remove absorbed rectangles
     pure_rects = filter(lambda rect: rect is not None, rects)
-    return intr_area, pure_rects
-
+    return intrs_area, pure_rects
 
 def process_input(input):
     raw_numbers = re.compile('\s+').split(input.strip())
@@ -87,8 +83,10 @@ def process_input(input):
     num_rects, raw_rects = numbers[0], numbers[1:]
     rects = []
     for i in xrange(num_rects):
+        #rects - 4 numbers per line
         rect = tuple(raw_rects[(i * 4):(i * 4 + 4)])
         x1, y1, x2, y2 = rect
+        #to inforce left-bottom, right-top notation
         x1, y1, x2, y2 = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
         rect = (x1, y1, x2, y2)
         rects.append(rect)
