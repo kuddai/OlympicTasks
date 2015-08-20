@@ -98,10 +98,10 @@ def read_file(file_name):
         return file.read()
 
 rects = process_input(read_file("input.txt"))
-start_time = time.time()
+#start_time = time.time()
 print calc_total_area(rects)
-end_time = time.time()
-print("--- %s seconds ---" % (end_time - start_time))
+#end_time = time.time()
+#print("--- %s seconds ---" % (end_time - start_time))
 
 """
 def test_total_area():
