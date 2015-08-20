@@ -1,2 +1,3 @@
-1 - 1221
-2 - 818
+1 -    1221 - without_absorbing - 79.970 - with_absorbing - 00.019 
+2 -     818 - without_absorbing - 00.002 - with_absorbing - 00.001
+3 - 3205762 - without_absorbing -   None - with_absorbing - 00.178

@@ -3,12 +3,17 @@
 #http://informatics.mccme.ru//mod/statements/view3.php?chapterid=644#1
 import sys
 import re
+import time
 
 x1, y1, x2, y2 = range(4)
 
 def is_intersected(r1, r2):
     return r2[x1] < r1[x2] and r2[y1] < r1[y2] and \
            r2[x2] > r1[x1] and r2[y2] > r1[y1]
+
+def is_absorbing(r1, r2):
+    return r1[x1] <= r2[x1] and r1[y1] <= r2[y1] and \
+           r1[x2] >= r2[x2] and r1[y2] >= r2[y2]
 
 def calc_intersection(r1, r2):
     r = [0, 0, 0, 0]
@@ -23,46 +28,6 @@ def calc_area(r):
     height = r[y2] - r[y1]
     return  width * height
 
-class Chunks:
-    def __init__(self, rects):
-        self.rects = rects
-        #rect_id_chunks
-        self.chunks = [None] * len(rects)
-        self.split_to_chunks()
-
-    def split_to_chunks(self):
-        rects = self.rects
-        n = len(rects)
-        for r1_id in xrange(n - 1):
-            for r2_id in xrange(r1_id + 1, n):
-                    self.update_between(r1_id, r2_id)
-
-    def get_chunks(self):
-        return self.chunks
-
-    def update_between(self, r1_id, r2_id):
-        chunk = self.get_chunk(r1_id)
-        r1, r2 = self.rects[r1_id], self.rects[r2_id]
-        if not is_intersected(r1, r2):
-            return
-        #actuall update
-        intersection = calc_intersection(r1, r2)
-        chunk.add(intersection)
-
-    def get_chunk(self, rect_id):
-        if self.chunks[rect_id] is not None:
-            return self.chunks[rect_id]
-        return self.create_chunk(rect_id)
-
-    def create_chunk(self, rect_id):
-        chunk = set()
-        self.chunks[rect_id] = chunk
-        return chunk
-
-    def find_chunk(self, rect_id):
-        #self.intersecton_chunks[]
-        pass
-
 def calc_total_area(rects):
     n = len(rects)
     if n == 0:
@@ -70,44 +35,45 @@ def calc_total_area(rects):
     if n == 1:
         return calc_area(rects[0])
 
-    raw_area = sum(map(calc_area, rects))
-#sdfds
-    if raw_area < 250000:
-        return calc_total_area_ink(rects)
-
     rects = sorted(rects, key=lambda rect: rect[y1])
     intr_area = 0
 
     for r1_id in xrange(n - 1):
+        r1 = rects[r1_id]
+        if r1 is None:
+            continue
         chunk = []
         for r2_id in xrange(r1_id + 1, n):
-            r1, r2 = rects[r1_id], rects[r2_id]
+            r2 = rects[r2_id]
+            if r2 is None:
+                continue
             if r1[y2] < r2[y1]:
                 break
-            if is_intersected(r1, r2):
-                intersection = calc_intersection(r1, r2)
-                chunk.append(intersection)
+            if not is_intersected(r1, r2):
+                continue
+
+            if is_absorbing(r1, r2):
+                #r1 absorbs r2
+                rects[r2_id] = None
+                continue
+
+            if is_absorbing(r2, r1):
+                #r2 absorbs r1
+                rects[r1_id] = None
+                chunk = []
+                break
+
+            intersection = calc_intersection(r1, r2)
+            chunk.append(intersection)
+
         #remove duplicates
         chunk = list(set(chunk))
         intr_area += calc_total_area(chunk)
 
+    pure_rects = filter(lambda rect: rect is not None, rects)
+    raw_area = sum(map(calc_area, pure_rects))
+
     return raw_area - intr_area
-
-def calc_total_area_ink(rects):
-    field = set()
-    for rect in rects:
-        x1, y1, x2, y2 = rect
-        for x in xrange(x1, x2):
-            for y in xrange(y1, y2):
-                field.add((x,y))
-    return len(field)
-
-
-    #chunks = Chunks(rects)
-    #intersection_chunks = chunks.get_chunks()
-
-    #intr_area = sum(total_area(list(intr_chunk)) for intr_chunk in intersection_chunks)
-    #return raw_area - intr_area
 
 def process_input(input):
     raw_numbers = re.compile('\s+').split(input.strip())
@@ -121,13 +87,19 @@ def process_input(input):
         rect = (x1, y1, x2, y2)
         rects.append(rect)
 
-    #rects = [ tuple(raw_rects[(i * 4):(i * 4 + 4)]) for i in xrange(num_rects)]
     return rects
 
 def read_file(file_name):
     with open (file_name, "r") as file:
         return file.read()
 
+rects = process_input(read_file("input.txt"))
+#start_time = time.time()
+print calc_total_area(rects)
+#end_time = time.time()
+#print("--- %s seconds ---" % (end_time - start_time))
+
+"""
 def test_total_area():
     print "test 'total_area'"
 
@@ -150,24 +122,19 @@ def test_total_area():
              (10,  5, 12,  7),
              (11,  6, 13,  8)]
     assert calc_total_area(rects) == 49
+    print "example 6 - success"
 
     rects = [( 6,  8, 14, 15),
              ( 6,  5, 12, 10),
              ( 6,  2, 15, 10),
              ( 6,  7, 14, 14)]
     assert calc_total_area(rects) == 112
-
     print "example 5 - success"
 
 def test_process_input():
     print "test 'process_input'"
 
-    test_input = """
-    3
-    1 2 3 4
-    2 3 5 5
-    20 30 40 50
-    """
+    test_input = "3\n1 2 3 4\n2 3 5 5\n20 30 40 50"
     rects = process_input(test_input)
     assert rects[0] == (1, 2, 3, 4)
     assert rects[1] == (2, 3, 5, 5)
@@ -242,26 +209,7 @@ def test_calc_intersection():
 
     print ""
 
-rects = process_input(read_file("input.txt"))
-#rects = [( 6,  8, 14, 15),
-#         ( 6,  5, 12, 10),
-#         ( 6,  2, 15, 10),
-#         ( 6,  7, 14, 14)]
-#print "should be 112"
-#rects = [(0, 0, 5, 5),
-#         (1, 1, 6, 6),
-#         (2, 2, 7, 7),
-#         (3, 3, 8, 8),
-#         (4, 4, 9, 9),
-#         (12, 12, 14, 14),
-#         (13, 13, 15, 15)]
-#print 61  + 7
-#print total_area(rects)
-
-
-#print "example 5 - success"
-print calc_total_area(rects)
-#test_process_input()
-#test_is_intersected()
-#test_calc_intersection()
-#test_total_area()
+test_process_input()
+test_is_intersected()
+test_calc_intersection()
+test_total_area() """
