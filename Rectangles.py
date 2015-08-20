@@ -28,6 +28,8 @@ def calc_area(r):
     height = r[y2] - r[y1]
     return  width * height
 
+
+
 def calc_total_area(rects):
     n = len(rects)
     if n == 0:
@@ -35,45 +37,49 @@ def calc_total_area(rects):
     if n == 1:
         return calc_area(rects[0])
 
-    rects = sorted(rects, key=lambda rect: rect[y1])
+    intr_area, rects = calc_intr_area(rects)
+    raw_area = sum(map(calc_area, rects))
+
+    return raw_area - intr_area
+
+
+def calc_intr_area(rects):
+    n = len(rects)
     intr_area = 0
+    rects = sorted(rects, key=lambda rect: rect[y1])#to do zoning in at least one axis
 
     for r1_id in xrange(n - 1):
         r1 = rects[r1_id]
         if r1 is None:
             continue
-        chunk = []
+        intersections = []
         for r2_id in xrange(r1_id + 1, n):
             r2 = rects[r2_id]
+
             if r2 is None:
                 continue
-            if r1[y2] < r2[y1]:
+            if r1[y2] < r2[y1]:#zoning
                 break
             if not is_intersected(r1, r2):
                 continue
-
+            #absorbing allows to remove duplicates
             if is_absorbing(r1, r2):
-                #r1 absorbs r2
+                # r1 absorbs r2. All intersections of r2 will be in r1 so we in effect remove r2 from future consideration
                 rects[r2_id] = None
                 continue
-
             if is_absorbing(r2, r1):
-                #r2 absorbs r1
+                # r2 absorbs r1. All intersections of r1 will be in r2 as well so terminate earlier
                 rects[r1_id] = None
-                chunk = []
+                intersections = []
                 break
 
-            intersection = calc_intersection(r1, r2)
-            chunk.append(intersection)
+            intersections.append(calc_intersection(r1, r2))
 
-        #remove duplicates
-        chunk = list(set(chunk))
-        intr_area += calc_total_area(chunk)
-
+        intr_area += calc_total_area(intersections)
+    #remove absorbed rectangles
     pure_rects = filter(lambda rect: rect is not None, rects)
-    raw_area = sum(map(calc_area, pure_rects))
+    return intr_area, pure_rects
 
-    return raw_area - intr_area
 
 def process_input(input):
     raw_numbers = re.compile('\s+').split(input.strip())
@@ -94,10 +100,10 @@ def read_file(file_name):
         return file.read()
 
 rects = process_input(read_file("input.txt"))
-#start_time = time.time()
+start_time = time.time()
 print calc_total_area(rects)
-#end_time = time.time()
-#print("--- %s seconds ---" % (end_time - start_time))
+end_time = time.time()
+print("--- %s seconds ---" % (end_time - start_time))
 
 """
 def test_total_area():
